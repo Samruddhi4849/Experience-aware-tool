@@ -1,222 +1,143 @@
 # Experience-Aware Tool Memory Dashboard
 
-A TacTool-inspired agentic AI system that remembers its own tool-use history —
-so it stops repeating tool calls that already failed, and can tell you why.
-
-**Student:** Samruddhi Shinde · Third Year · Information Technology
-**College:** Fr. C. Rodrigues Institute of Technology (FCRIT), Vashi
-
----
+## Student Details
+- **Student:** Samruddhi Shinde
+- **Roll Number:** 5024160
+- **Branch:** Information Technology
+- **Year:** Third Year
+- **College:** Fr. C. Rodrigues Institute of Technology (FCRIT), Vashi
+- **Academic Year:** 2026-2027
 
 ## 1. Overview
 
-Most simple tool-using agents treat every tool call as independent: ask the
-same question twice, get the same (possibly broken) call twice. This project
-adds an **experience-aware memory layer** on top of a standard
-reasoner-then-tool-caller agent, so that:
+This project is a simulation-based agentic AI application that demonstrates how a tool-using AI agent can avoid repeating its own past mistakes by remembering the outcome of every tool call it has ever made.
 
-- Every tool call — success or failure — is logged with its arguments, status,
-  error, latency, retry count, and a timestamp.
-- Before making a new tool call, the agent searches its memory for **semantically
-  similar** past experiences (not just exact string matches).
-- If a similar call failed before, the agent surfaces that history to the user
-  and records a **lesson learned**, instead of blindly repeating the mistake.
+The core problem it demonstrates is simple: a tool-using agent that treats every request as independent will happily repeat a tool call that already failed — the same rate-limited weather API, the same invalid currency pair — over and over, with no memory of the outcome. Instead of calling tools blindly, this project's agent checks its own history first, and changes strategy when it recognizes a past failure.
 
-## 2. Problem Statement & Motivation
+**What the project actually implements:**
 
-Tool-using AI agents are increasingly common, but most have no persistent
-memory of their own failures. A rate-limited API call, an invalid argument, or
-a down service will simply fail again on the next identical request. This
-project asks: *what if the agent could remember, and adapt?*
+- A simulated agent pipeline (reasoning → memory retrieval → tool selection → tool execution → result evaluation → logging), written in Python — there is no real production API dependency required to run it.
+- An experience memory layer, implemented from scratch on top of SQLite (structured log) and ChromaDB (semantic/vector search), that is updated after every single tool call and consulted before the next one.
+- A closed feedback loop: query → reasoning → memory check → tool call → outcome → lesson learned → memory update.
+- A multi-page Streamlit dashboard that lets you run the agent interactively, force specific failure types on demand, and inspect every stored experience, its analytics, and its lessons learned.
 
-## 3. TacTool Connection
+This project is a focused, teaching-scale prototype of the reasoning/tool-calling separation described by the TacTool concept (see Section 7). It implements only the core loop plus an experience-memory extension — it is not a reproduction of any larger production system, and does not use any external LLM by default.
 
-This project is inspired by **"TacTool: Tactical Tool Usage in Agentic AI
-Systems"**, specifically its separation of *reasoning* from *tool calling* in
-an agentic pipeline. **This is an academic extension, not the original paper's
-implementation** — see `pages/6_About.py` for the concept-by-concept mapping,
-and note that the exact bibliographic details for the source paper are left as
-a placeholder in the About page (see "Academic Honesty Note" below).
+## 2. Application Screenshot
 
-## 4. Features
+*(placeholder — add a screenshot of the Agent Playground page here before submission)*
 
-- Dark, card-based Streamlit dashboard (no default Streamlit look)
-- Agent Playground: chat-style interface with a live, step-by-step execution
-  pipeline (query understood → memory search → tool call → experience logged →
-  response)
-- 4 working tools: Weather, Calculator, Knowledge (Wikipedia), Currency
-- Deterministic **failure simulator**: timeout, invalid argument, rate limit,
-  unavailable tool, success — for reliable demos
-- Persistent **SQLite** experience log (survives restarts)
-- Persistent **ChromaDB** semantic memory, using a fully offline hashing
-  embedding function (no model download, no API key required)
-- Tool Performance analytics (Plotly): success rate, latency, failure counts,
-  usage share, failure trend over time
-- Failed Experiences page with aggregated lessons learned
-- System Architecture page with a full pipeline diagram
-- Demo Mode (default, zero configuration) and Live Mode (optional real APIs)
+The dashboard has six pages, reachable from the sidebar:
 
-## 5. Architecture
+- **Home** — execution mode (Demo/Live) and live top-line metrics (total calls, success rate, failures, avg latency, vectors stored).
+- **Agent Playground** — the main demo screen. Enter a query, optionally force a failure type, and click Run agent. Shows, top to bottom: Reasoning, Memory Retrieval (similar past experiences with a similarity score), the live Execution Pipeline (step-by-step ✅/⚠️/❌ log), the Tool Call (tool, status badge, latency), and the Final Response.
+- **Experience Memory** — a searchable, filterable table of every stored experience (tool, arguments, status, latency, retry count, timestamp, error, lesson), downloadable as CSV.
+- **Tool Performance** — Plotly charts computed live from stored data: success rate per tool, average latency per tool, failures per tool, usage share, and failure trend over time.
+- **Failed Experiences** — one card per (tool, arguments) pair that has ever failed, showing failure count, last error, and the stored lesson.
+- **System Architecture / About** — the pipeline diagram with a component-by-component explanation, plus student details and the TacTool paper reference.
 
-```
-User Query -> Reasoner -> Experience Memory Retrieval -> Tool Selection
-  -> Tool Caller -> External Tool/API -> Result Evaluation
-  -> Experience Logger -> SQLite + Vector Memory -> Final Response
-```
+The user types a query (or picks the recommended demo query), optionally selects a simulated outcome from the dropdown, and clicks **Run agent** to execute one full pipeline cycle.
 
-See the in-app **System Architecture** page for a component-by-component
-explanation.
+## 3. Tech Stack
 
-## 6. Tech Stack
+| Technology | Purpose |
+|---|---|
+| Python | Backend logic — reasoner, tool caller, tools, experience pipeline |
+| Streamlit | Web dashboard (multi-page app, custom dark theme) |
+| SQLite | Structured, persistent experience log (survives restarts) |
+| ChromaDB | Persistent vector store for semantic experience retrieval |
+| Custom hashing embedder | Offline bag-of-words embedding function (`core/vector_memory.py`) — no model download, no API key needed |
+| Plotly | Tool performance analytics charts |
+| Pydantic | Typed data models for every stage of the pipeline |
+| `anthropic` SDK (optional) | Only used in Live Mode, to let an LLM make the reasoning/routing decision instead of the rule-based router |
 
-Python · Streamlit · SQLite · ChromaDB · Plotly · Pydantic ·
-`anthropic` SDK (optional, Live Mode reasoning only) · `requests` (optional,
-Live Mode tools only)
+The semantic memory is implemented directly, from scratch, in `vector_memory.py` (a 256-dimension hashing bag-of-words embedder feeding a ChromaDB collection with cosine similarity). No pretrained embedding model or external ML library is required anywhere in Demo Mode.
 
-## 7. How the System Works
+## 4. Architecture
 
-1. **Reasoner** (`core/reasoner.py`) parses the query and decides which tool
-   and arguments to use. Rule-based by default; can optionally call Claude in
-   Live Mode.
-2. **Experience Memory Retrieval** (`core/vector_memory.py`) embeds the query
-   with an offline hashing bag-of-words embedder and searches a persistent
-   ChromaDB collection for similar past experiences.
-3. **Tool Caller** (`core/tool_caller.py`) executes the chosen tool
-   (`core/tools.py`), optionally forcing a simulated outcome.
-4. **Result Evaluation** classifies the outcome and, on failure, generates a
-   lesson from a small template keyed to the failure type.
-5. **Experience Logger** (`core/database.py`) writes the outcome to SQLite.
-6. **Memory Update** embeds and stores the same experience in ChromaDB.
-7. The **final response** is generated, noting when prior history changed the
-   agent's strategy.
+User Query
+↓
+Reasoner
+↓
+Experience Memory Retrieval
+↓
+Tool Selection
+↓
+Tool Caller
+↓
+Tool Execution (Weather / Calculator / Knowledge / Currency)
+↓
+Result Evaluation
+↓
+Experience Logger
+↓
+SQLite + Vector Memory Update
+↓
+Final Response
 
-## 8. Experience Memory Explained
 
-Two stores, one experience:
+**Component roles:**
 
-- **SQLite** (`data/experiences.db`) — the structured, queryable log. Powers
-  the Experience Memory and Tool Performance pages.
-- **ChromaDB** (`data/chroma_store/`) — the semantic index over the same
-  experiences. Powers "find something similar to this new query" in the
-  Agent Playground.
+- `app.py` — Starts the Streamlit app, initializes the SQLite database, and serves the Home page with live top-line metrics.
+- `core/reasoner.py` — Parses the query and decides which tool + arguments to use. Rule-based (regex/keyword routing) by default; optionally calls an LLM in Live Mode, with automatic fallback to the rule-based router if that call fails.
+- `core/vector_memory.py` — Wraps a persistent ChromaDB collection using an offline hashing embedding function; answers "have I seen something like this before?"
+- `core/tool_caller.py` — Maps the reasoner's decision to the matching tool function and executes it, optionally forcing a simulated outcome.
+- `core/tools.py` — The four tools (weather, calculator, knowledge, currency), each returning a typed `ToolResult` with success flag, output, error message, and latency.
+- `core/agent.py` — Orchestrates the full pipeline end to end and builds the "lesson learned" on failure.
+- `core/database.py` — The SQLite persistence layer: inserts, filters, and the analytics/lessons-learned aggregation queries.
+- `pages/*.py`, `utils/styling.py` — The dashboard UI and its dark-theme styling helpers.
 
-## 9. Database Schema
+## 5. Working
 
-```sql
-CREATE TABLE experiences (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tool_name TEXT NOT NULL,
-    input_arguments TEXT NOT NULL,   -- JSON
-    status TEXT NOT NULL,            -- success | failure | timeout | retry
-    output TEXT,
-    error_message TEXT,
-    latency_ms INTEGER NOT NULL,
-    retry_count INTEGER NOT NULL DEFAULT 0,
-    timestamp TEXT NOT NULL,
-    lessons_learned TEXT
-);
-```
+**Query understanding** — `core/reasoner.py` parses the free-text query and decides which of the four tools to call and with what arguments (verified in `route_query`, using keyword/regex routing over weather, calculator, knowledge, and currency phrasing).
 
-## 10. Sample Input / Output
+**Experience memory retrieval** — The query is embedded into a 256-dimension vector (verified in `vector_memory.py`, `EMBED_DIM = 256`) using a deterministic hashing bag-of-words function, then compared against every previously stored experience in ChromaDB using cosine similarity. Matches below a similarity of 0.15 are discarded (`min_similarity = 0.15`).
+
+**Tool selection** — The reasoner's chosen tool name and arguments are passed to `core/tool_caller.py`, which looks up the matching function from `TOOL_FUNCTIONS` in `tools.py`.
+
+**Tool execution** — One of 4 tools is called (verified in `tools.py`): `get_weather`, `calculate`, `search_knowledge`, or `convert_currency`. Each can run in a real mode (if a free API key is configured and Live Mode is on) or a deterministic demo/mock mode, and each accepts an optional `simulate` argument to force `success`, `timeout`, `invalid_argument`, `rate_limit`, or `unavailable_tool` for demonstration purposes.
+
+**Result evaluation** — `core/agent.py` classifies the outcome. On failure, it matches the error text against a small set of templates to generate a specific lesson (e.g. a rate-limit failure produces a different lesson than an invalid-argument failure).
+
+**Experience logging and memory update** — The outcome — tool name, arguments, status, output/error, latency, retry count, timestamp, and lesson — is written to the `experiences` table in SQLite (`core/database.py`), and the same experience is immediately embedded and added to the ChromaDB collection (`core/vector_memory.py`), so the very next query can retrieve it.
+
+**Final response** — The agent generates a natural-language response, explicitly noting when a prior similar failure influenced the current run's framing.
+
+## 6. Sample Output
 
 **Input:** `What's the weather in Mumbai?` (simulate: Rate Limit)
-**Output:** *"I couldn't complete that: API rate limit exceeded. This has
-been logged so future attempts can avoid the same failure. Lesson: Avoid
-immediate repeated calls with identical arguments; back off, or use a cached
-result if one exists."*
+**Output:** *"I couldn't complete that: API rate limit exceeded. This has been logged so future attempts can avoid the same failure. Lesson: Avoid immediate repeated calls with identical arguments; back off, or use a cached result if one exists."*
 
 **Input (repeated):** `What's the weather in Mumbai?` (simulate: Success)
-**Output:** *"Weather in Mumbai: 29°C, partly cloudy, humidity 68%. (Note: a
-previous identical/similar call had failed — this run used that history to
-avoid repeating the same mistake.)"*
+**Output:** *"Weather in Mumbai: 29°C, partly cloudy, humidity 68%. (Note: a previous identical/similar call had failed — this run used that history to avoid repeating the same mistake.)"*
 
-## 11. Screenshots
+## 7. Reference Paper
 
-*(placeholder — add screenshots of Agent Playground, Tool Performance, and
-Failed Experiences here before submission)*
+**"TacTool: Tactical Tool Usage in Agentic AI Systems"**
 
-## 12. Demo Walkthrough
+- **Authors:** (not verified — see note below)
+- **Conference / Publication:** (not verified)
+- **Pages:** (not verified)
+- **DOI / Link:** (not verified)
 
-1. Open **Agent Playground**.
-2. Ask `What's the weather in Mumbai?` with **Simulate outcome = rate_limit**.
-   Watch the pipeline log the failure.
-3. Ask the exact same question again with **Simulate outcome = success**.
-   Watch the **Memory Retrieval** panel surface the earlier failure, and the
-   final response note that history changed the outcome.
-4. Visit **Experience Memory** to see both rows persisted.
-5. Visit **Tool Performance** to see the charts update live.
-6. Visit **Failed Experiences** to see the aggregated lesson for that query.
+**Note on this citation:** the exact bibliographic details for this paper (authors, venue, year, DOI/link) were not present in the supplied project brief, and a search did not turn up a verifiable paper by this exact title. Rather than invent authors or a publication venue, these fields are left as an honest placeholder — fill them in from your course materials or the original paper PDF before submission.
 
-## 13. Installation & How to Run (Windows)
+**How this project relates to the paper:** The TacTool concept centers on separating tactical tool-selection reasoning from tool execution in an agentic AI system. This project implements a small, simulation-based version of that separation (Reasoner vs. Tool Caller), and then extends it with an experience-memory layer of this project's own design: historical retrieval, failure detection, structured SQLite logging, and lessons learned.
 
-```powershell
+This project does not claim to implement the paper's full system, any of its underlying models, or its exact experimental setup. It is a simplified, teaching-scale prototype inspired by the reasoning/tool-calling separation concept, with an original memory-layer extension on top.
+
+## 8. Demo Walkthrough
+
+1. **Start the application** — From the project folder, run:
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 streamlit run app.py
-```
-
-If `python` doesn't work, try `py` instead of `python` throughout.
-
-No API key is required — the app runs entirely in **Demo Mode** by default.
-To try Live Mode, copy `.env.example` to `.env`, set `EXECUTION_MODE=live`,
-and add whichever optional API keys you have (Anthropic / OpenWeather /
-ExchangeRate-API). Any key left blank simply falls back to its demo behavior.
-
-### Run the backend smoke test (optional, no Streamlit needed)
-
-```powershell
-python -m tests.test_backend_smoke
-```
-
-## 14. Project Structure
-
-```
-tactool_dashboard/
-├── app.py                          # Home page / entry point
-├── pages/
-│   ├── 1_Agent_Playground.py
-│   ├── 2_Experience_Memory.py
-│   ├── 3_Tool_Performance.py
-│   ├── 4_Failed_Experiences.py
-│   ├── 5_System_Architecture.py
-│   └── 6_About.py
-├── core/
-│   ├── config.py                   # env / mode loading
-│   ├── models.py                   # Pydantic models
-│   ├── database.py                 # SQLite layer
-│   ├── vector_memory.py            # ChromaDB + offline embedder
-│   ├── tools.py                    # weather, calculator, knowledge, currency
-│   ├── reasoner.py                 # query -> (tool, arguments)
-│   ├── tool_caller.py              # executes the chosen tool
-│   └── agent.py                    # full pipeline orchestration
-├── utils/
-│   └── styling.py                  # dark theme CSS + render helpers
-├── tests/
-│   └── test_backend_smoke.py
-├── data/                           # created at runtime (SQLite + ChromaDB)
-├── .env.example
-├── requirements.txt
-└── README.md
-```
-
-## 15. Paper Reference
-
-See the **About** page in-app. The exact title/authors/venue/link for the
-TacTool paper were not present in the supplied project brief, and are left
-as a clearly marked placeholder rather than invented — fill them in from your
-course materials before submission.
-
-## 16. Academic Honesty Note
-
-The experience-aware memory layer (SQLite + ChromaDB + lessons-learned) is
-**this project's own extension**, not part of the original TacTool paper.
-The comparison table in the About page makes this distinction explicit.
-
-## 17. Conclusion
-
-This project demonstrates that a simple, non-LLM-dependent reasoner and a
-small offline vector memory are enough to give a tool-using agent a working
-form of experience: it can recognize when it's about to repeat a known
-mistake, say so, and adjust — all logged, all persistent, all inspectable from
-the dashboard.
+   No API key is required — the app runs entirely in Demo Mode by default.
+2. **Open the web dashboard** — Streamlit opens automatically at `http://localhost:8501`.
+3. Open **Agent Playground** from the sidebar.
+4. **Run the first call** — Enter `What's the weather in Mumbai?`, set Simulate outcome to `rate_limit`, and click **▶ Run agent**. Watch the pipeline log the failure and the experience get recorded.
+5. **Run the second call** — Enter the exact same query again, set Simulate outcome to `success`, and click **▶ Run agent**. Observe the Memory Retrieval panel surfacing the earlier failure before the tool runs, and the final response noting that history changed the outcome.
+6. **Observe experience memory** — Open **Experience Memory** to see both rows persisted with full details.
+7. **Observe analytics** — Open **Tool Performance** to see the success-rate, latency, and failure charts update live from the two calls you just made.
+8. **Observe lessons learned** — Open **Failed Experiences** to see the aggregated lesson stored for that (tool, arguments) pair.
