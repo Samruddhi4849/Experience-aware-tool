@@ -26,6 +26,8 @@ This project is a focused, teaching-scale prototype of the reasoning/tool-callin
 ## 2. Application Screenshot
 
 <img width="1587" height="753" alt="Screenshot 2026-09-24 121534" src="https://github.com/user-attachments/assets/0db36d1a-5bd1-4503-b8b5-17c42b3423cf" />
+<img width="1598" height="758" alt="Screenshot 2026-09-24 121542" src="https://github.com/user-attachments/assets/3ebdfa73-526b-4719-a5d8-c0c0582fefd8" />
+
 
 
 The dashboard has six pages, reachable from the sidebar:
@@ -89,6 +91,7 @@ Final Response
 - `pages/*.py`, `utils/styling.py` — The dashboard UI and its dark-theme styling helpers.
 
 ## 5. Working
+
 
 **Query understanding** — `core/reasoner.py` parses the free-text query and decides which of the four tools to call and with what arguments (verified in `route_query`, using keyword/regex routing over weather, calculator, knowledge, and currency phrasing).
 
