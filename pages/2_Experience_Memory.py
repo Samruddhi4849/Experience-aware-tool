@@ -49,7 +49,7 @@ else:
         mask = df.apply(lambda r: search.lower() in str(r.to_dict()).lower(), axis=1)
         df = df[mask]
 
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
     st.caption(f"Showing {len(df)} of {len(experiences)} loaded experiences.")
 
     st.download_button(

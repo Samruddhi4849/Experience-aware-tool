@@ -43,7 +43,7 @@ else:
             template="plotly_dark",
         )
         fig.update_layout(showlegend=False, paper_bgcolor="#161b22", plot_bgcolor="#161b22")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with right:
         st.subheader("Average latency per tool")
@@ -53,7 +53,7 @@ else:
             template="plotly_dark",
         )
         fig2.update_layout(showlegend=False, paper_bgcolor="#161b22", plot_bgcolor="#161b22")
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
 
     left2, right2 = st.columns(2)
     with left2:
@@ -64,13 +64,13 @@ else:
             template="plotly_dark",
         )
         fig3.update_layout(showlegend=False, paper_bgcolor="#161b22", plot_bgcolor="#161b22")
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3, width="stretch")
 
     with right2:
         st.subheader("Tool usage frequency")
         fig4 = px.pie(per_tool, names="tool_name", values="total", template="plotly_dark", hole=0.45)
         fig4.update_layout(paper_bgcolor="#161b22")
-        st.plotly_chart(fig4, use_container_width=True)
+        st.plotly_chart(fig4, width="stretch")
 
     st.subheader("Failure trend over time")
     by_day = pd.DataFrame(analytics["by_day"])
@@ -81,7 +81,7 @@ else:
             template="plotly_dark",
         )
         fig5.update_layout(paper_bgcolor="#161b22", plot_bgcolor="#161b22")
-        st.plotly_chart(fig5, use_container_width=True)
+        st.plotly_chart(fig5, width="stretch")
 
     st.subheader("Raw per-tool numbers")
-    st.dataframe(per_tool, use_container_width=True, hide_index=True)
+    st.dataframe(per_tool, width="stretch", hide_index=True)
