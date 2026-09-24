@@ -91,6 +91,8 @@ Final Response
 - `pages/*.py`, `utils/styling.py` — The dashboard UI and its dark-theme styling helpers.
 
 ## 5. Working
+![Uploading Screenshot 2026-09-24 120838.png…]()
+
 
 
 **Query understanding** — `core/reasoner.py` parses the free-text query and decides which of the four tools to call and with what arguments (verified in `route_query`, using keyword/regex routing over weather, calculator, knowledge, and currency phrasing).
