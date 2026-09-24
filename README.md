@@ -25,7 +25,8 @@ This project is a focused, teaching-scale prototype of the reasoning/tool-callin
 
 ## 2. Application Screenshot
 
-*(placeholder — add a screenshot of the Agent Playground page here before submission)*
+<img width="1587" height="753" alt="Screenshot 2026-09-24 121534" src="https://github.com/user-attachments/assets/0db36d1a-5bd1-4503-b8b5-17c42b3423cf" />
+
 
 The dashboard has six pages, reachable from the sidebar:
 
