@@ -25,9 +25,9 @@ This project is a focused, teaching-scale prototype of the reasoning/tool-callin
 
 ## 2. Application Screenshot
 
-<img width="1587" height="753" alt="Screenshot 2026-09-24 121534" src="https://github.com/user-attachments/assets/0db36d1a-5bd1-4503-b8b5-17c42b3423cf" />
-<img width="1598" height="758" alt="Screenshot 2026-09-24 121542" src="https://github.com/user-attachments/assets/3ebdfa73-526b-4719-a5d8-c0c0582fefd8" />
+<img width="948" height="441" alt="Screenshot 2026-09-28 210635" src="https://github.com/user-attachments/assets/bbd0b823-54cd-462c-8bc7-aa35bac5d16f" />
 
+<img width="935" height="424" alt="Screenshot 2026-09-28 210701" src="https://github.com/user-attachments/assets/b18ca5ab-2ca0-4be8-9c26-ba497432d178" />
 
 
 The dashboard has six pages, reachable from the sidebar:
