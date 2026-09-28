@@ -91,8 +91,7 @@ Final Response
 - `pages/*.py`, `utils/styling.py` — The dashboard UI and its dark-theme styling helpers.
 
 ## 5. Working
-<img width="1574" height="740" alt="Screenshot 2026-09-24 120838" src="https://github.com/user-attachments/assets/d4a3f949-127f-41b9-a7cb-7b20b2674607" />
-
+<img width="887" height="443" alt="Screenshot 2026-09-28 210848" src="https://github.com/user-attachments/assets/963c7250-43ca-4fae-aac8-93597bd2fcca" />
 
 
 
